@@ -4,6 +4,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -42,6 +46,9 @@ public class Model {
 
 	// variables used for manager
 	private GregorianCalendar selectedDate;
+	
+	private Connection connection = JDBCUtil.getConnectionByDriverManager();
+	private Statement statement = JDBCUtil.getStatement(connection);
 
 	/**
 	 * Constructs the database. Loads the serialized accounts and reservations.
@@ -84,6 +91,7 @@ public class Model {
 	 */
 	public void addAccount(Account account) {
 		accounts.add(account);
+		storeAccountToDatabase(account);
 		update();
 	}
 	
@@ -253,6 +261,70 @@ public class Model {
 		}
 		return null;
 	}
+	
+	public boolean checkUserExistence(String userId) {
+		String query = "SELECT userName FROM USER";
+		
+		try {
+			// check user table
+			ResultSet rs = statement.executeQuery(query);
+			while (rs.next()) {
+				if (rs.getString(1).equals(userId)) return true;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public boolean checkUserPassword(String userId, String password) {
+		boolean result = false;
+		String query = "SELECT password FROM USER WHERE userName = '" + userId + "'";
+		
+		try {
+			ResultSet rs = statement.executeQuery(query);
+			if (rs.next() && rs.getString(1).equals(password)) result = true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			result = false;
+		}
+		
+		return result; 
+	}
+	
+	public String getUserSecurityQuestion(String userId) {
+		String result = null;
+		String query = "SELECT question FROM USER WHERE username = '" + userId + "'";
+		
+		try {
+			ResultSet rs = statement.executeQuery(query);
+			if (rs.next()) {
+				result = rs.getString(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+	
+	public String checkSecurityAnswer(String userId, String answer) {
+		String result = null;
+		String query = "SELECT answer,password FROM USER WHERE username = '" + userId + "'";
+		
+		try {
+			ResultSet rs = statement.executeQuery(query);
+			if (rs.next() && rs.getString(1).equals(answer)) {
+				result = rs.getString(2);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
 
 	/**
 	 * Checks to see if inputed data is valid. If it is not, this method will
@@ -383,6 +455,24 @@ public class Model {
 			return;
 		}
 	}
+	
+	/**
+	 * Stores the account to database
+	 * @param account - the account to be stored
+	 */
+	private void storeAccountToDatabase(Account account) {
+		String query = String.format("INSERT INTO USER(userName,password,firstName,lastName,age,gender,phoneNumber,address,userRole,question,answer)"
+						+ " VALUES('%s','%s','%s','%s',%s,'%s','%s','%s', '%s', '%s', '%s')", 
+						account.getUserID(), account.getPassword(), account.getFirstName(), account.getLastName(),
+						account.getAge(), account.getGender(), account.getPhone(), account.getAddress(), account.getRole(),
+						account.getSecurityQuestion(), account.getSecurityAnswer());
+		
+		try {
+			statement.execute(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Deserializes the accounts and reservations. Only deserializes when the
@@ -392,6 +482,35 @@ public class Model {
 	public void deserialize() {
 		File a = new File("accounts.ser");
 		File r = new File("reservations.ser");
+		
+		// get all accounts from user
+		String query = "SELECT * FROM USER";
+		
+		try {
+			Account account = null;
+			String userName, password, firstName, lastName, gender, phoneNumber, address, role, question, answer;
+			int age;
+			
+			ResultSet rs = statement.executeQuery(query);
+			while (rs.next()) {
+				userName = rs.getString(2);
+				password = rs.getString(3);
+				firstName = rs.getString(4);
+				lastName = rs.getString(5);
+				age = rs.getInt(6);
+				gender = rs.getString(7);
+				phoneNumber = rs.getString(8);
+				address = rs.getString(9);
+				role = rs.getString(10);
+				question = rs.getString(11);
+				answer = rs.getString(12);
+				account = new Account(firstName + " " + lastName, userName, password, age, gender,
+									  phoneNumber, address, role, question, answer);
+				accounts.add(account);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		
 		if(a.exists() && !a.isDirectory()) {
 			try {

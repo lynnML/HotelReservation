@@ -16,6 +16,14 @@ import java.util.ArrayList;
 public class Account implements Serializable {
 	final private String userID; // cannot be changed once account is created
 	private String name;
+	private String password;
+	private int age;
+	private String gender;
+	private String phone;
+	private String address;
+	private String role;
+	private String secQuestion;
+	private String secAnswer;
 	private ArrayList<Reservation> reservations;
 
 	/**
@@ -29,6 +37,32 @@ public class Account implements Serializable {
 		reservations = new ArrayList<Reservation>();
 	}
 
+	/**
+	 * Create an account with the given values
+	 * @param name - the user's name
+	 * @param userId - the user's ID
+	 * @param password - the user's password
+	 * @param birthDate - the user's birthdate
+	 * @param gender - the user's gender
+	 * @param phone - the user's phone
+	 * @param address - the user's address
+	 */
+	public Account(String name, String userId, String password, 
+			       int age, String gender, String phone,
+			       String address, String role, String secQuestion, String secAnswer) {
+		this.userID = userId;
+		this.name = name;
+		this.password = password;
+		this.age = age;
+		this.gender = gender;
+		this.phone = phone;
+		this.address = address;
+		this.role = role;
+		this.secQuestion = secQuestion;
+		this.secAnswer = secAnswer;
+		reservations = new ArrayList<Reservation>();
+	}
+	
 	/**
 	 * Returns the user's ID.
 	 * @return the userID
@@ -44,13 +78,85 @@ public class Account implements Serializable {
 	public String getName() {
 		return name.toUpperCase();
 	}
+	
+	public String getFirstName() {
+		return name.split(" ")[0];
+	}
 
+	public String getLastName() {
+		return name.split(" ")[1];
+	}
+	
 	/**
 	 * Sets the user's name.
 	 * @param name the name
 	 */
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public String getPassword() {
+		return password;
+	}
+	
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
+	}
+
+	public String getGender() {
+		return gender;
+	}
+
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+	
+	public void setRole(String role) {
+		this.role = role;
+	}
+	
+	public String getRole() {
+		return role;
+	}
+	
+	public void setAddress(String address) {
+		this.address = address;
+	}
+	
+	public String getSecurityQuestion() {
+		return secQuestion;
+	}
+	
+	public void setSecurityQuestion(String secQuestion) {
+		this.secQuestion = secQuestion;
+	}
+	
+	public String getSecurityAnswer() {
+		return secAnswer;
+	}
+	
+	public void getSecurityAnswer(String secAnswer) {
+		this.secAnswer = secAnswer;
 	}
 
 	/**
